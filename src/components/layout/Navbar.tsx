@@ -19,6 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { GlobalSearch } from "@/components/layout/GlobalSearch";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { ClonnectLogo } from "@/components/brand/ClonnectLogo";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -41,13 +42,7 @@ export function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
         <Link href="/feed" className="flex items-center gap-2.5 shrink-0">
-          <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-glow to-violet-glow shadow-lg">
-            <span className="text-lg font-black text-navy">C</span>
-            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-cyan-glow/20 to-violet-glow/20 blur-lg" />
-          </div>
-          <span className="hidden text-xl font-bold tracking-tight sm:block">
-            <span className="gradient-text">Clonnect</span>
-          </span>
+          <ClonnectLogo size={36} showText textClassName="text-xl" />
         </Link>
 
         <div className="hidden md:flex flex-1 max-w-md mx-auto">
@@ -94,7 +89,7 @@ export function Navbar() {
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
-                <Link href="/api/users/me" className="flex items-center gap-2 w-full">
+                <Link href="/profile/me" className="flex items-center gap-2 w-full">
                   <User className="h-4 w-4" />
                   Profile
                 </Link>

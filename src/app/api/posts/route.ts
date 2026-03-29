@@ -15,6 +15,7 @@ const createPostSchema = z.object({
 
 // GET /api/posts — list with cursor pagination
 export async function GET(req: NextRequest) {
+  const session = await auth();
   const { searchParams } = new URL(req.url);
   const cursor = searchParams.get("cursor");
   const limit = parseInt(searchParams.get("limit") || "10");
@@ -44,7 +45,31 @@ export async function GET(req: NextRequest) {
     nextCursor = next?.id;
   }
 
-  return NextResponse.json({ posts, nextCursor });
+  let userLikes: Set<string> = new Set();
+  let userSaves: Set<string> = new Set();
+
+  if (session?.user?.id) {
+    const postIds = posts.map((post) => post.id);
+    const [likes, saves] = await Promise.all([
+      prisma.like.findMany({
+        where: { userId: session.user.id, postId: { in: postIds } },
+      }),
+      prisma.save.findMany({
+        where: { userId: session.user.id, postId: { in: postIds } },
+      }),
+    ]);
+
+    userLikes = new Set(likes.map((like) => like.postId));
+    userSaves = new Set(saves.map((save) => save.postId));
+  }
+
+  const postsWithInteractions = posts.map((post) => ({
+    ...post,
+    userLiked: userLikes.has(post.id),
+    userSaved: userSaves.has(post.id),
+  }));
+
+  return NextResponse.json({ posts: postsWithInteractions, nextCursor });
 }
 
 // POST /api/posts — create

@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 
 // GET /api/discover — search users and posts
 export async function GET(req: NextRequest) {
+  const session = await auth();
   const { searchParams } = new URL(req.url);
   const query = searchParams.get("q") || "";
   const type = searchParams.get("type") || "all"; // users | posts | all
@@ -55,16 +57,41 @@ export async function GET(req: NextRequest) {
       ];
     }
 
-    results.posts = await prisma.post.findMany({
+    const posts = await prisma.post.findMany({
       where: postWhere,
       take: 20,
       include: {
         author: { select: { id: true, name: true, image: true, username: true } },
         tags: true,
-        _count: { select: { likes: true, comments: true } },
+        _count: { select: { likes: true, comments: true, saves: true } },
       },
       orderBy: { createdAt: "desc" },
     });
+
+    if (session?.user?.id && posts.length > 0) {
+      const postIds = posts.map((post) => post.id);
+      const [likes, saves] = await Promise.all([
+        prisma.like.findMany({
+          where: { userId: session.user.id, postId: { in: postIds } },
+          select: { postId: true },
+        }),
+        prisma.save.findMany({
+          where: { userId: session.user.id, postId: { in: postIds } },
+          select: { postId: true },
+        }),
+      ]);
+
+      const likedIds = new Set(likes.map((like) => like.postId));
+      const savedIds = new Set(saves.map((save) => save.postId));
+
+      results.posts = posts.map((post) => ({
+        ...post,
+        userLiked: likedIds.has(post.id),
+        userSaved: savedIds.has(post.id),
+      }));
+    } else {
+      results.posts = posts;
+    }
   }
 
   return NextResponse.json(results);

@@ -46,13 +46,15 @@ export interface FeedCardProps {
 export function FeedCard({ post, onLike, onSave }: FeedCardProps) {
   const [liked, setLiked] = useState(post.userLiked ?? false);
   const [likeCount, setLikeCount] = useState(post._count.likes);
+  const [saved, setSaved] = useState(post.userSaved ?? false);
 
   // Keep local optimistic state in sync when the server sends updated post data (e.g. after refetch).
   /* eslint-disable react-hooks/set-state-in-effect -- syncing props → local UI state after parent refetch */
   useEffect(() => {
     setLiked(post.userLiked ?? false);
     setLikeCount(post._count.likes);
-  }, [post.id, post.userLiked, post._count.likes]);
+    setSaved(post.userSaved ?? false);
+  }, [post.id, post.userLiked, post.userSaved, post._count.likes]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const isHelp = post.type === "HELP_REQUEST";
@@ -67,6 +69,16 @@ export function FeedCard({ post, onLike, onSave }: FeedCardProps) {
     if (!wasLiked) {
       toast.success("Post liked!", { duration: 1500, position: "bottom-center" });
     }
+  }
+
+  async function handleSaveClick() {
+    const wasSaved = saved;
+    setSaved(!wasSaved);
+    await onSave?.(post.id);
+    toast.success(wasSaved ? "Removed from saved posts" : "Saved for later", {
+      duration: 1500,
+      position: "bottom-center",
+    });
   }
 
   return (
@@ -175,10 +187,10 @@ export function FeedCard({ post, onLike, onSave }: FeedCardProps) {
           <Button
             variant="ghost"
             size="sm"
-            className={cn("h-8 text-xs", post.userSaved ? "text-cyan-400" : "text-muted-foreground")}
-            onClick={() => onSave?.(post.id)}
+            className={cn("h-8 text-xs", saved ? "text-cyan-400" : "text-muted-foreground")}
+            onClick={handleSaveClick}
           >
-            <Bookmark className={cn("h-4 w-4", post.userSaved && "fill-current")} />
+            <Bookmark className={cn("h-4 w-4", saved && "fill-current")} />
           </Button>
           <Button variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground">
             <Share2 className="h-4 w-4" />

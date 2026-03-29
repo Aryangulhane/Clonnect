@@ -2,6 +2,9 @@ import type { NextAuthConfig } from "next-auth";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 
+const googleClientId = process.env.GOOGLE_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+
 /**
  * Edge-compatible auth config — NO Prisma imports.
  * Used by middleware.ts for route protection.
@@ -12,10 +15,14 @@ export const authConfig: NextAuthConfig = {
     newUser: "/auth/register",
   },
   providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
+    ...(googleClientId && googleClientSecret
+      ? [
+          Google({
+            clientId: googleClientId,
+            clientSecret: googleClientSecret,
+          }),
+        ]
+      : []),
     // Credentials provider declared here for shape, actual authorize logic is in auth.ts
     Credentials({
       name: "credentials",

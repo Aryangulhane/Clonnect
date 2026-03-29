@@ -2,7 +2,7 @@
 
 import { use } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   MapPin, GraduationCap, Calendar, FileText,
@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 
 export default function ProfilePage({ params }: { params: Promise<{ username: string }> }) {
   const { username } = use(params);
+  const queryClient = useQueryClient();
 
   const { data: user, isLoading } = useQuery({
     queryKey: ["user", username],
@@ -37,6 +38,17 @@ export default function ProfilePage({ params }: { params: Promise<{ username: st
   async function handleFollow() {
     if (!user?.id) return;
     await fetch(`/api/users/${user.id}/follow`, { method: "POST" });
+    queryClient.invalidateQueries({ queryKey: ["user", username] });
+  }
+
+  async function handleLike(postId: string) {
+    await fetch(`/api/posts/${postId}/like`, { method: "POST" });
+    queryClient.invalidateQueries({ queryKey: ["userPosts", user?.id] });
+  }
+
+  async function handleSave(postId: string) {
+    await fetch(`/api/posts/${postId}/save`, { method: "POST" });
+    queryClient.invalidateQueries({ queryKey: ["userPosts", user?.id] });
   }
 
   if (isLoading) {
@@ -204,21 +216,42 @@ export default function ProfilePage({ params }: { params: Promise<{ username: st
                 </TabsList>
                 <TabsContent value="posts" className="mt-4 space-y-4">
                   {postsData?.posts?.length > 0 ? (
-                    postsData.posts.map((post: ProfilePost) => <FeedCard key={post.id} post={post} />)
+                    postsData.posts.map((post: ProfilePost) => (
+                      <FeedCard
+                        key={post.id}
+                        post={post}
+                        onLike={handleLike}
+                        onSave={handleSave}
+                      />
+                    ))
                   ) : (
                     <p className="text-center text-sm text-muted-foreground py-12">No posts yet</p>
                   )}
                 </TabsContent>
                 <TabsContent value="resources" className="mt-4 space-y-4">
                   {resources.length > 0 ? (
-                    resources.map((post: ProfilePost) => <FeedCard key={post.id} post={post} />)
+                    resources.map((post: ProfilePost) => (
+                      <FeedCard
+                        key={post.id}
+                        post={post}
+                        onLike={handleLike}
+                        onSave={handleSave}
+                      />
+                    ))
                   ) : (
                     <p className="text-center text-sm text-muted-foreground py-12">No resources shared yet</p>
                   )}
                 </TabsContent>
                 <TabsContent value="questions" className="mt-4 space-y-4">
                   {questions.length > 0 ? (
-                    questions.map((post: ProfilePost) => <FeedCard key={post.id} post={post} />)
+                    questions.map((post: ProfilePost) => (
+                      <FeedCard
+                        key={post.id}
+                        post={post}
+                        onLike={handleLike}
+                        onSave={handleSave}
+                      />
+                    ))
                   ) : (
                     <p className="text-center text-sm text-muted-foreground py-12">No questions asked yet</p>
                   )}

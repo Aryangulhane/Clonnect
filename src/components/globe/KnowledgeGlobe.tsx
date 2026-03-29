@@ -2,7 +2,7 @@
 
 import { useRef, useMemo, useState, useCallback } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Text, Float } from "@react-three/drei";
+import { OrbitControls, Sparkles, Stars, Text, Float } from "@react-three/drei";
 import * as THREE from "three";
 
 // ═══ MIT ADT University Knowledge Graph Data ═══
@@ -82,7 +82,17 @@ function GlobeNode({
       {/* Glow */}
       <mesh ref={glowRef}>
         <sphereGeometry args={[nodeSize * 2, 16, 16]} />
-        <meshBasicMaterial color={color} transparent opacity={0.15} />
+        <meshBasicMaterial
+          color={color}
+          transparent
+          opacity={0.14}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </mesh>
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[nodeSize * 1.9, nodeSize * 0.18, 12, 48]} />
+        <meshBasicMaterial color={color} transparent opacity={0.25} />
       </mesh>
       {/* Core node */}
       <mesh
@@ -92,18 +102,22 @@ function GlobeNode({
         onClick={(e) => { e.stopPropagation(); onClick(index); }}
       >
         <sphereGeometry args={[nodeSize, 32, 32]} />
-        <meshStandardMaterial
+        <meshPhysicalMaterial
           color={color}
           emissive={color}
-          emissiveIntensity={isHovered ? 3 : 1.5}
+          emissiveIntensity={isHovered ? 3.2 : 1.8}
+          roughness={0.15}
+          metalness={0.2}
+          clearcoat={1}
+          clearcoatRoughness={0.15}
           toneMapped={false}
         />
       </mesh>
       {/* Label */}
       <Float speed={1.5} rotationIntensity={0} floatIntensity={0.3}>
         <Text
-          position={[0, 0.25, 0]}
-          fontSize={isHovered ? 0.14 : 0.1}
+          position={[0, 0.24, 0]}
+          fontSize={isHovered ? 0.13 : 0.09}
           color="white"
           anchorX="center"
           anchorY="middle"
@@ -225,11 +239,40 @@ function GlobeScene() {
 
   return (
     <>
-      <ambientLight intensity={0.3} />
-      <pointLight position={[10, 10, 10]} intensity={0.5} />
-      <pointLight position={[-10, -10, -10]} intensity={0.3} color="#a78bfa" />
+      <color attach="background" args={["#000000"]} />
+      <fog attach="fog" args={["#050816", 7, 14]} />
+      <ambientLight intensity={0.45} />
+      <hemisphereLight intensity={0.4} color="#d8f6ff" groundColor="#090b14" />
+      <pointLight position={[8, 6, 8]} intensity={1} color="#22d3ee" />
+      <pointLight position={[-8, -4, -8]} intensity={0.7} color="#a78bfa" />
+      <spotLight position={[0, 7, 4]} intensity={0.9} angle={0.4} penumbra={0.6} color="#ffffff" />
+
+      <Stars radius={18} depth={24} count={1000} factor={2.8} saturation={0} fade speed={0.35} />
+      <Sparkles
+        count={42}
+        scale={[8, 8, 8]}
+        size={2}
+        speed={0.35}
+        opacity={0.35}
+        color="#9bdcf0"
+      />
 
       <group ref={groupRef}>
+        <mesh>
+          <icosahedronGeometry args={[1.1, 5]} />
+          <meshPhysicalMaterial
+            color="#0b1227"
+            emissive="#1d4ed8"
+            emissiveIntensity={0.15}
+            transparent
+            opacity={0.22}
+            roughness={0.2}
+            metalness={0.35}
+            clearcoat={1}
+            clearcoatRoughness={0.3}
+          />
+        </mesh>
+
         {/* Edges */}
         {EDGES.map(([a, b], i) => (
           <GlobeEdge
@@ -268,8 +311,13 @@ function GlobeScene() {
             color="#22d3ee"
             wireframe
             transparent
-            opacity={0.03}
+            opacity={0.06}
           />
+        </mesh>
+
+        <mesh rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[3.15, 0.015, 8, 180]} />
+          <meshBasicMaterial color="#22d3ee" transparent opacity={0.2} />
         </mesh>
       </group>
 
@@ -288,21 +336,39 @@ function GlobeScene() {
 // ═══ Main Export ═══
 export default function KnowledgeGlobe() {
   return (
-    <div className="relative h-full w-full min-h-[500px]">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-radial from-cyan-glow/5 via-transparent to-transparent" />
+    <div className="relative h-full w-full min-h-[500px] overflow-hidden rounded-[36px] border border-white/10 bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.14),_transparent_34%),linear-gradient(180deg,rgba(8,12,24,0.96),rgba(4,6,16,0.98))] shadow-[0_30px_90px_rgba(6,12,28,0.65)]">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-[8%] rounded-full border border-cyan-glow/10 blur-sm" />
+        <div className="absolute inset-[16%] rounded-full border border-violet-glow/10" />
+        <div className="absolute left-[12%] top-[14%] h-32 w-32 rounded-full bg-cyan-glow/12 blur-3xl" />
+        <div className="absolute bottom-[12%] right-[14%] h-36 w-36 rounded-full bg-violet-glow/12 blur-3xl" />
+      </div>
 
-      <Canvas
-        camera={{ position: [0, 0, 6], fov: 50 }}
-        dpr={[1, 2]}
-        gl={{ antialias: true, alpha: true }}
-        style={{ background: "transparent" }}
+      <div
+        className="absolute inset-0"
+        style={{
+          maskImage: "radial-gradient(circle at center, black 58%, transparent 92%)",
+          WebkitMaskImage: "radial-gradient(circle at center, black 58%, transparent 92%)",
+        }}
       >
-        <GlobeScene />
-      </Canvas>
+        <Canvas
+          camera={{ position: [0, 0, 5.8], fov: 42 }}
+          dpr={[1, 2]}
+          gl={{ antialias: true, alpha: true }}
+        >
+          <GlobeScene />
+        </Canvas>
+      </div>
 
-      {/* Overlay gradient for blending */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-background via-transparent to-transparent opacity-30" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background via-background/35 to-transparent" />
+      <div className="pointer-events-none absolute bottom-5 left-5 rounded-2xl border border-white/10 bg-black/25 px-4 py-3 backdrop-blur-md">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-glow/80">
+          Live Knowledge Map
+        </p>
+        <p className="mt-1 max-w-[15rem] text-xs leading-relaxed text-white/65">
+          Explore the strongest skill clusters, campus topics, and the links between them.
+        </p>
+      </div>
     </div>
   );
 }

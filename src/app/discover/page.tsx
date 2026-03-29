@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import Fuse from "fuse.js";
 import {
@@ -46,6 +46,7 @@ const DEPARTMENTS_FILTER = [
 ];
 
 export default function DiscoverPage() {
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"users" | "posts">("users");
   const [skillFilter, setSkillFilter] = useState("All");
@@ -88,6 +89,16 @@ export default function DiscoverPage() {
     if (deptFilter !== "All") {
       filtered = (filtered as DiscoverUser[]).filter((u) => u.department === deptFilter);
     }
+  }
+
+  async function handleLike(postId: string) {
+    await fetch(`/api/posts/${postId}/like`, { method: "POST" });
+    queryClient.invalidateQueries({ queryKey: ["discover"] });
+  }
+
+  async function handleSave(postId: string) {
+    await fetch(`/api/posts/${postId}/save`, { method: "POST" });
+    queryClient.invalidateQueries({ queryKey: ["discover"] });
   }
 
   return (
@@ -252,7 +263,12 @@ export default function DiscoverPage() {
               ) : (
                 <div className="space-y-4">
                   {(filtered as DiscoverPost[]).map((post) => (
-                    <FeedCard key={post.id} post={post} />
+                    <FeedCard
+                      key={post.id}
+                      post={post}
+                      onLike={handleLike}
+                      onSave={handleSave}
+                    />
                   ))}
                   {filtered.length === 0 && (
                     <div className="text-center py-12 text-muted-foreground">
