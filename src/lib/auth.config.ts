@@ -1,10 +1,8 @@
 import type { NextAuthConfig } from "next-auth";
-import Google from "next-auth/providers/google";
-import Credentials from "next-auth/providers/credentials";
+import { applyAuthEnvironment, getAuthSecret } from "@/lib/auth-env";
 import { getPreferredBaseUrl, getSafeCallbackPath } from "@/lib/auth-redirect";
 
-const googleClientId = process.env.GOOGLE_CLIENT_ID;
-const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+applyAuthEnvironment();
 
 /**
  * Edge-compatible auth config — NO Prisma imports.
@@ -12,32 +10,14 @@ const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
  */
 export const authConfig: NextAuthConfig = {
   trustHost: true,
-  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+  secret: getAuthSecret(),
   pages: {
     signIn: "/auth/login",
     newUser: "/auth/register",
+    error: "/auth/login",
   },
-  providers: [
-    ...(googleClientId && googleClientSecret
-      ? [
-          Google({
-            clientId: googleClientId,
-            clientSecret: googleClientSecret,
-          }),
-        ]
-      : []),
-    // Credentials provider declared here for shape, actual authorize logic is in auth.ts
-    Credentials({
-      name: "credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
       // NOTE: This authorize stub is intentional — the real authorize()
-      // lives in src/lib/auth.ts. This file is edge-compatible (no Prisma).
-      authorize: () => null,
-    }),
-  ],
+  providers: [],
   callbacks: {
     async authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;

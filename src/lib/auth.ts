@@ -1,10 +1,17 @@
 import NextAuth from "next-auth";
+import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { getPrismaClient, prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { authConfig } from "@/lib/auth.config";
+import { applyAuthEnvironment, getAuthSecret } from "@/lib/auth-env";
+
+applyAuthEnvironment();
+
+const googleClientId = process.env.GOOGLE_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -14,15 +21,21 @@ const loginSchema = z.object({
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   // Pass the REAL PrismaClient, not the Proxy — PrismaAdapter needs direct access
+  secret: getAuthSecret(),
   adapter: PrismaAdapter(getPrismaClient()),
   // Credentials provider does NOT support database sessions — must use JWT
   session: { strategy: "jwt" },
   providers: [
     // Google is already declared in authConfig — only override Credentials here
     // because the real authorize() needs Prisma (not edge-compatible)
-    ...authConfig.providers.filter(
-      (p) => (p as { type?: string }).type !== "credentials"
-    ),
+    ...(googleClientId && googleClientSecret
+      ? [
+          Google({
+            clientId: googleClientId,
+            clientSecret: googleClientSecret,
+          }),
+        ]
+      : []),
     Credentials({
       name: "credentials",
       credentials: {
@@ -60,4 +73,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
+  logger: {
+    error(error) {
+      console.error("[Auth.js]", error);
+    },
+    warn(code) {
+      console.warn("[Auth.js]", code);
+    },
+  },
 });

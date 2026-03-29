@@ -23,13 +23,28 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
+function getAuthErrorMessage(error: string | null) {
+  switch (error) {
+    case "CredentialsSignin":
+      return "Invalid email or password.";
+    case "Configuration":
+      return "Sign-in is temporarily unavailable. Please verify auth settings and try again.";
+    case "AccessDenied":
+      return "Access was denied for this sign-in attempt.";
+    case "OAuthAccountNotLinked":
+      return "That email is already linked to a different sign-in method.";
+    default:
+      return "";
+  }
+}
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = getSafeCallbackPath(searchParams.get("callbackUrl"), "/feed");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(() => getAuthErrorMessage(searchParams.get("error")));
   const [googleEnabled, setGoogleEnabled] = useState(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
@@ -58,6 +73,10 @@ function LoginForm() {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    setError(getAuthErrorMessage(searchParams.get("error")));
+  }, [searchParams]);
 
   async function onSubmit(data: LoginForm) {
     setLoading(true);
