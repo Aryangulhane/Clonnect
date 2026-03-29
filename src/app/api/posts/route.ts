@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const parsed = createPostSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid input", details: parsed.error.flatten() }, { status: 400 });
+      return NextResponse.json({ error: "Invalid input", details: parsed.error.format() }, { status: 400 });
     }
 
     const { type, title, content, isUrgent, tags, fileUrls } = parsed.data;
