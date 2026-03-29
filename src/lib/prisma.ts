@@ -22,12 +22,16 @@ function createPrismaClient(): PrismaClient {
   return new PrismaClient({
     adapter,
     log: process.env.NODE_ENV === "development"
-      ? ["query", "error", "warn"]
+      ? ["error", "warn"]
       : ["error"],
   });
 }
 
-function getPrismaClient(): PrismaClient {
+/**
+ * Returns the real PrismaClient instance (not a proxy).
+ * Needed for PrismaAdapter and direct Prisma usage.
+ */
+export function getPrismaClient(): PrismaClient {
   if (globalThis.__prisma) {
     return globalThis.__prisma;
   }
@@ -41,6 +45,7 @@ function getPrismaClient(): PrismaClient {
   return client;
 }
 
+/** Default export — lazy singleton via Proxy for general use */
 export const prisma = new Proxy({} as PrismaClient, {
   get(_target, prop) {
     const client = getPrismaClient();
