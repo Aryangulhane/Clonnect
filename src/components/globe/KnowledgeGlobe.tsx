@@ -5,26 +5,37 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Text, Float } from "@react-three/drei";
 import * as THREE from "three";
 
-// ═══ Data ═══
+// ═══ MIT ADT University Knowledge Graph Data ═══
 const SUBJECTS = [
-  { name: "Python", students: 342, posts: 18, pos: [0, 2.2, 0] },
-  { name: "Machine Learning", students: 289, posts: 24, pos: [2, 0.8, 1] },
-  { name: "React", students: 256, posts: 31, pos: [-1.8, 1.2, 1.5] },
-  { name: "Data Science", students: 198, posts: 12, pos: [1.5, -1.4, 1.2] },
-  { name: "UI/UX Design", students: 176, posts: 9, pos: [-2, -0.5, -1] },
-  { name: "Node.js", students: 231, posts: 15, pos: [0.5, -2, -1.3] },
-  { name: "TypeScript", students: 267, posts: 22, pos: [-0.8, 0.3, -2.2] },
-  { name: "AWS", students: 145, posts: 7, pos: [2.2, -0.3, -0.8] },
-  { name: "Docker", students: 134, posts: 5, pos: [-1.5, -1.8, 0.5] },
-  { name: "Cybersecurity", students: 112, posts: 8, pos: [0.3, 1.5, -1.8] },
-  { name: "Flutter", students: 167, posts: 11, pos: [1.2, 1.8, -0.6] },
-  { name: "PostgreSQL", students: 189, posts: 6, pos: [-0.5, -0.8, 2.2] },
+  { name: "Python", students: 487, posts: 24, pos: [0, 2.2, 0] },
+  { name: "Machine Learning", students: 312, posts: 31, pos: [2, 0.8, 1] },
+  { name: "React", students: 278, posts: 38, pos: [-1.8, 1.2, 1.5] },
+  { name: "Data Science", students: 256, posts: 18, pos: [1.5, -1.4, 1.2] },
+  { name: "UI/UX Design", students: 198, posts: 14, pos: [-2, -0.5, -1] },
+  { name: "Node.js", students: 231, posts: 21, pos: [0.5, -2, -1.3] },
+  { name: "TypeScript", students: 267, posts: 29, pos: [-0.8, 0.3, -2.2] },
+  { name: "Docker", students: 167, posts: 12, pos: [2.2, -0.3, -0.8] },
+  { name: "Cybersecurity", students: 145, posts: 16, pos: [-1.5, -1.8, 0.5] },
+  { name: "Flutter", students: 189, posts: 15, pos: [0.3, 1.5, -1.8] },
+  { name: "Deep Learning", students: 203, posts: 22, pos: [1.2, 1.8, -0.6] },
+  { name: "Blockchain", students: 134, posts: 9, pos: [-0.5, -0.8, 2.2] },
+  { name: "Next.js", students: 221, posts: 27, pos: [1.8, 0.2, 1.6] },
+  { name: "Go / Rust", students: 112, posts: 8, pos: [-1.2, 1.8, -1.2] },
+  { name: "NLP", students: 178, posts: 19, pos: [0.8, -1.6, -1.8] },
 ];
 
 const EDGES: [number, number][] = [
-  [0, 1], [0, 2], [0, 6], [1, 3], [1, 9], [2, 6], [2, 4],
-  [3, 11], [4, 2], [5, 6], [5, 7], [7, 8], [8, 5], [9, 7],
-  [10, 2], [10, 5], [11, 5], [3, 0], [6, 5], [1, 10],
+  [0, 1], [0, 2], [0, 3], [0, 6], // Python connects to ML, React, DS, TS
+  [1, 3], [1, 10], [1, 14], // ML connects to DS, DL, NLP
+  [2, 4], [2, 6], [2, 12], // React connects to UI/UX, TS, Next.js
+  [3, 0], [3, 14], // DS connects to Python, NLP
+  [5, 6], [5, 7], [5, 12], // Node.js connects to TS, Docker, Next.js
+  [6, 12], [6, 13], // TS connects to Next.js, Go/Rust
+  [7, 5], [7, 13], // Docker connects to Node.js, Go/Rust
+  [8, 0], [8, 7], // Cybersecurity connects to Python, Docker
+  [9, 4], [9, 5], // Flutter connects to UI/UX, Node.js
+  [10, 1], [10, 14], // DL connects to ML, NLP
+  [11, 6], [11, 13], // Blockchain connects to TS, Go/Rust
 ];
 
 // ═══ Glowing Node ═══
@@ -47,6 +58,9 @@ function GlobeNode({
   const glowRef = useRef<THREE.Mesh>(null);
   const scale = isHovered ? 1.6 : 1;
 
+  // Size based on student count
+  const nodeSize = 0.06 + (subject.students / 500) * 0.06;
+
   useFrame((state) => {
     if (meshRef.current) {
       const t = state.clock.elapsedTime + index * 0.5;
@@ -59,13 +73,15 @@ function GlobeNode({
     }
   });
 
-  const color = index % 2 === 0 ? "#22d3ee" : "#a78bfa";
+  // Alternate between cyan and violet, with some special colors
+  const colors = ["#22d3ee", "#a78bfa", "#34d399", "#f472b6", "#fbbf24"];
+  const color = colors[index % colors.length];
 
   return (
     <group position={position}>
       {/* Glow */}
       <mesh ref={glowRef}>
-        <sphereGeometry args={[0.15, 16, 16]} />
+        <sphereGeometry args={[nodeSize * 2, 16, 16]} />
         <meshBasicMaterial color={color} transparent opacity={0.15} />
       </mesh>
       {/* Core node */}
@@ -75,7 +91,7 @@ function GlobeNode({
         onPointerLeave={() => onHover(null)}
         onClick={(e) => { e.stopPropagation(); onClick(index); }}
       >
-        <sphereGeometry args={[0.08, 32, 32]} />
+        <sphereGeometry args={[nodeSize, 32, 32]} />
         <meshStandardMaterial
           color={color}
           emissive={color}
@@ -91,7 +107,6 @@ function GlobeNode({
           color="white"
           anchorX="center"
           anchorY="middle"
-          font="/fonts/inter-medium.woff"
           outlineWidth={0.01}
           outlineColor="#000000"
         >
@@ -112,7 +127,6 @@ function GlobeEdge({
   end: [number, number, number];
   index: number;
 }) {
-  const lineRef = useRef<THREE.Line>(null);
   const particleRef = useRef<THREE.Mesh>(null);
 
   const points = useMemo(() => {
@@ -150,7 +164,7 @@ function GlobeEdge({
 
   return (
     <group>
-      <primitive ref={lineRef as React.Ref<THREE.Object3D>} object={lineObj} />
+      <primitive ref={undefined} object={lineObj} />
       {/* Travelling particle */}
       <mesh ref={particleRef}>
         <sphereGeometry args={[0.025, 8, 8]} />
@@ -183,7 +197,7 @@ function NodeTooltip({
         outlineWidth={0.005}
         outlineColor="#000000"
       >
-        {`${subject.students} students · ${subject.posts} posts today`}
+        {`${subject.students} students · ${subject.posts} posts this week`}
       </Text>
     </group>
   );

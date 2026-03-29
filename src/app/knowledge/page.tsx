@@ -14,16 +14,20 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { cn } from "@/lib/utils";
 
-// Demo saved resources (works without DB)
+// Demo saved resources — MIT ADT University knowledge base
 const DEMO_RESOURCES = [
-  { id: "1", title: "Complete ML Roadmap 2026", type: "pdf", tags: ["Machine Learning", "AI", "Roadmap"], author: "Sophia Chen", savedAt: "2 days ago", size: "2.4 MB" },
-  { id: "2", title: "React Server Components Guide", type: "doc", tags: ["React", "Next.js"], author: "Arjun Mehta", savedAt: "3 days ago", size: "1.1 MB" },
-  { id: "3", title: "Git & GitHub Cheat Sheet", type: "image", tags: ["Git", "GitHub", "Beginners"], author: "Emma Schmidt", savedAt: "1 week ago", size: "450 KB" },
-  { id: "4", title: "Data Structures Visualizer", type: "link", tags: ["Data Structures", "Tool"], author: "Carlos Rivera", savedAt: "1 week ago", size: null },
-  { id: "5", title: "System Design Interview Notes", type: "pdf", tags: ["System Design", "Interview Prep"], author: "Ravi Patel", savedAt: "2 weeks ago", size: "3.8 MB" },
-  { id: "6", title: "Cybersecurity CTF Toolkit", type: "doc", tags: ["Cybersecurity", "CTF"], author: "Aisha Khan", savedAt: "2 weeks ago", size: "5.2 MB" },
-  { id: "7", title: "Competitive Programming Problem Set", type: "pdf", tags: ["CP", "LeetCode", "Algorithms"], author: "Lucas Martin", savedAt: "3 weeks ago", size: "1.7 MB" },
-  { id: "8", title: "UI/UX Design Course Notes", type: "doc", tags: ["Design", "Figma", "UI/UX"], author: "Priya Sharma", savedAt: "1 month ago", size: "2.1 MB" },
+  { id: "1", title: "Complete ML Roadmap 2026 — Semester Exam Edition", type: "pdf", tags: ["Machine Learning", "AI", "Exam Prep"], author: "Aarav Deshmukh", savedAt: "2 days ago", size: "2.4 MB" },
+  { id: "2", title: "Next.js 15 + Prisma + Neon Setup Guide", type: "doc", tags: ["Next.js", "Prisma", "Full-Stack"], author: "Aryan Gulhane", savedAt: "3 days ago", size: "1.8 MB" },
+  { id: "3", title: "Kaggle Competition Starter Kit — Data Science Club", type: "pdf", tags: ["Data Science", "Kaggle", "Python"], author: "Sneha Kulkarni", savedAt: "4 days ago", size: "3.2 MB" },
+  { id: "4", title: "UI/UX Design Workshop — Figma Component Library", type: "link", tags: ["Design", "Figma", "UI/UX"], author: "Priya Sharma", savedAt: "1 week ago", size: null },
+  { id: "5", title: "Docker & Microservices Architecture Notes", type: "pdf", tags: ["Docker", "DevOps", "System Design"], author: "Rohan Patil", savedAt: "1 week ago", size: "1.5 MB" },
+  { id: "6", title: "CTF Practice Roadmap — Beginner to HackTheBox Pro", type: "doc", tags: ["Cybersecurity", "CTF", "Ethical Hacking"], author: "Ishita Wagh", savedAt: "2 weeks ago", size: "5.2 MB" },
+  { id: "7", title: "Flutter Campus App Templates (5 Starters)", type: "doc", tags: ["Flutter", "Mobile", "Templates"], author: "Aditya Kale", savedAt: "2 weeks ago", size: "2.8 MB" },
+  { id: "8", title: "Hugging Face Transformers Notebook Collection", type: "pdf", tags: ["NLP", "Deep Learning", "Transformers"], author: "Ananya Bhosale", savedAt: "2 weeks ago", size: "4.1 MB" },
+  { id: "9", title: "Solidity Smart Contract Security Checklist", type: "pdf", tags: ["Blockchain", "Solidity", "Security"], author: "Harsh Gaikwad", savedAt: "3 weeks ago", size: "1.7 MB" },
+  { id: "10", title: "Competitive Programming Weekly Problem Set", type: "doc", tags: ["CP", "Algorithms", "ICPC"], author: "Rohan Patil", savedAt: "3 weeks ago", size: "980 KB" },
+  { id: "11", title: "Data Analytics with Pandas & Power BI — Internship Notes", type: "pdf", tags: ["Data Science", "Analytics", "Power BI"], author: "Tanvi Deshpande", savedAt: "1 month ago", size: "3.5 MB" },
+  { id: "12", title: "Git & GitHub Visual Cheat Sheet for Freshers", type: "image", tags: ["Git", "GitHub", "Beginners"], author: "Sahil Mane", savedAt: "1 month ago", size: "450 KB" },
 ];
 
 const ALL_TAGS = [...new Set(DEMO_RESOURCES.flatMap((r) => r.tags))];

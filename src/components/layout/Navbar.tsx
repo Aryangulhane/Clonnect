@@ -78,16 +78,14 @@ export function Navbar() {
           </Link>
 
           <DropdownMenu>
-            <DropdownMenuTrigger>
-              <Button variant="ghost" className="flex items-center gap-2 px-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
-                  <AvatarFallback className="bg-gradient-to-br from-cyan-glow/20 to-violet-glow/20 text-sm font-semibold">
-                    {user?.name?.[0] || "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground hidden sm:block" />
-              </Button>
+            <DropdownMenuTrigger className="flex items-center gap-2 px-2 hover:bg-muted rounded-lg transition-colors -m-2 p-2">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
+                <AvatarFallback className="bg-gradient-to-br from-cyan-glow/20 to-violet-glow/20 text-sm font-semibold">
+                  {user?.name?.[0] || "U"}
+                </AvatarFallback>
+              </Avatar>
+              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground hidden sm:block" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 bg-card border-border">
               <div className="px-2 py-2">

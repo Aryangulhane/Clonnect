@@ -71,10 +71,10 @@ const features = [
 ];
 
 const stats = [
-  { value: "2,400+", label: "Active Students" },
-  { value: "12K+",   label: "Resources Shared" },
-  { value: "180+",   label: "Universities" },
-  { value: "50+",    label: "Skill Categories" },
+  { value: "3,200+", label: "MIT ADT Students" },
+  { value: "15K+",   label: "Resources Shared" },
+  { value: "30+",    label: "Skill Categories" },
+  { value: "120+",   label: "Study Groups" },
 ];
 
 export default function LandingPage() {
@@ -127,7 +127,7 @@ export default function LandingPage() {
             >
               <Sparkles className="h-3.5 w-3.5 text-cyan-glow" />
               <span className="text-xs font-medium text-muted-foreground">
-                Join 2,400+ students already connected
+                Join 3,200+ MIT ADT students already connected
               </span>
             </motion.div>
 
