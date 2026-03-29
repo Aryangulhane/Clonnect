@@ -6,8 +6,8 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import Fuse from "fuse.js";
 import {
-  Search, Filter, Users, FileText, SlidersHorizontal, X,
-  GraduationCap, MapPin,
+  Search, Users, FileText, SlidersHorizontal, X,
+  GraduationCap,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -19,8 +19,21 @@ import {
 import { Navbar } from "@/components/layout/Navbar";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { MobileNav } from "@/components/layout/MobileNav";
-import { FeedCard } from "@/components/feed/FeedCard";
+import { FeedCard, type FeedCardProps } from "@/components/feed/FeedCard";
 import { cn } from "@/lib/utils";
+
+type DiscoverUser = {
+  id: string;
+  name: string | null;
+  username: string | null;
+  image: string | null;
+  university?: string | null;
+  department?: string | null;
+  skills?: { skill: { id: string; name: string } }[];
+  _count?: { followers: number; posts: number };
+};
+
+type DiscoverPost = FeedCardProps["post"];
 
 const SKILLS_FILTER = [
   "All", "Python", "JavaScript", "React", "Machine Learning", "Data Science",
@@ -44,33 +57,36 @@ export default function DiscoverPage() {
     queryFn: () => fetch(`/api/discover?type=${activeTab}`).then((r) => r.json()),
   });
 
-  const items = activeTab === "users" ? data?.users || [] : data?.posts || [];
+  const items = useMemo((): DiscoverUser[] | DiscoverPost[] => {
+    if (activeTab === "users") return (data?.users ?? []) as DiscoverUser[];
+    return (data?.posts ?? []) as DiscoverPost[];
+  }, [activeTab, data]);
 
-  // Fuse.js fuzzy search
   const fuse = useMemo(() => {
     if (activeTab === "users") {
-      return new Fuse(items, {
+      return new Fuse(items as DiscoverUser[], {
         keys: ["name", "username", "university", "department", "skills.skill.name"],
         threshold: 0.3,
       });
     }
-    return new Fuse(items, {
+    return new Fuse(items as DiscoverPost[], {
       keys: ["title", "content", "tags.tagName", "author.name"],
       threshold: 0.3,
     });
   }, [items, activeTab]);
 
-  let filtered = searchQuery ? fuse.search(searchQuery).map((r) => r.item) : items;
+  let filtered: DiscoverUser[] | DiscoverPost[] = searchQuery
+    ? (fuse.search(searchQuery).map((r) => r.item) as DiscoverUser[] | DiscoverPost[])
+    : items;
 
-  // Apply filters for users
   if (activeTab === "users") {
     if (skillFilter !== "All") {
-      filtered = filtered.filter((u: any) =>
-        u.skills?.some((s: any) => s.skill.name === skillFilter)
+      filtered = (filtered as DiscoverUser[]).filter((u) =>
+        u.skills?.some((s) => s.skill.name === skillFilter)
       );
     }
     if (deptFilter !== "All") {
-      filtered = filtered.filter((u: any) => u.department === deptFilter);
+      filtered = (filtered as DiscoverUser[]).filter((u) => u.department === deptFilter);
     }
   }
 
@@ -178,7 +194,7 @@ export default function DiscoverPage() {
                 </div>
               ) : activeTab === "users" ? (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {filtered.map((user: any) => (
+                  {(filtered as DiscoverUser[]).map((user) => (
                     <motion.div
                       key={user.id}
                       initial={{ opacity: 0, y: 5 }}
@@ -201,9 +217,9 @@ export default function DiscoverPage() {
                                   <span className="flex items-center gap-1 truncate"><GraduationCap className="h-3 w-3 shrink-0" /> {user.university}</span>
                                 )}
                               </div>
-                              {user.skills?.length > 0 && (
+                              {user.skills && user.skills.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mt-2">
-                                  {user.skills.slice(0, 3).map((s: any) => (
+                                  {user.skills.slice(0, 3).map((s) => (
                                     <Badge key={s.skill.id} variant="secondary" className="text-[10px] bg-primary/10 text-primary px-1.5 py-0">
                                       {s.skill.name}
                                     </Badge>
@@ -235,7 +251,9 @@ export default function DiscoverPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {filtered.map((post: any) => <FeedCard key={post.id} post={post} />)}
+                  {(filtered as DiscoverPost[]).map((post) => (
+                    <FeedCard key={post.id} post={post} />
+                  ))}
                   {filtered.length === 0 && (
                     <div className="text-center py-12 text-muted-foreground">
                       <FileText className="h-12 w-12 mx-auto mb-3 opacity-30" />

@@ -10,7 +10,7 @@ const mobileNavItems = [
   { href: "/discover", label: "Discover", icon: Compass },
   { href: "/knowledge", label: "Knowledge", icon: Brain },
   { href: "/notifications", label: "Alerts", icon: Bell },
-  { href: "/profile/me", label: "Profile", icon: User },
+  { href: "/api/users/me", label: "Profile", icon: User },
 ];
 
 export function MobileNav() {
@@ -23,7 +23,10 @@ export function MobileNav() {
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/40 bg-background/90 backdrop-blur-xl lg:hidden">
       <div className="flex items-center justify-around py-2 safe-area-inset-bottom">
         {mobileNavItems.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+          const isActive =
+            item.href === "/api/users/me"
+              ? pathname.startsWith("/profile")
+              : pathname === item.href || pathname.startsWith(item.href + "/");
           const Icon = item.icon;
           return (
             <Link

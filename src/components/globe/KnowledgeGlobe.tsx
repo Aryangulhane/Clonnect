@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useMemo, useState, useCallback } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Text, Float } from "@react-three/drei";
 import * as THREE from "three";
 
@@ -193,7 +193,7 @@ function NodeTooltip({
 function GlobeScene() {
   const groupRef = useRef<THREE.Group>(null);
   const [hoveredNode, setHoveredNode] = useState<number | null>(null);
-  const [autoRotate, setAutoRotate] = useState(true);
+  const [autoRotate] = useState(true);
 
   useFrame((state, delta) => {
     if (groupRef.current && autoRotate && hoveredNode === null) {

@@ -2,14 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  Eye, EyeOff, Mail, Lock, User, GraduationCap,
+  Eye, EyeOff, Mail, Lock, User,
   ArrowRight, Loader2, X, Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -62,7 +61,6 @@ const DEPARTMENTS = [
 ];
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);

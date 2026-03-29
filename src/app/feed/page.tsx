@@ -1,19 +1,19 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import {
   TrendingUp, Hash, Sparkles, X,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Navbar } from "@/components/layout/Navbar";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { PostComposer } from "@/components/feed/PostComposer";
-import { FeedCard } from "@/components/feed/FeedCard";
+import { FeedCard, type FeedCardProps } from "@/components/feed/FeedCard";
 import { FeedCardSkeleton } from "@/components/feed/FeedCardSkeleton";
+import { SkillGapWidget } from "@/components/feed/SkillGapWidget";
 import { cn } from "@/lib/utils";
 
 const FEED_TABS = [
@@ -153,7 +153,7 @@ export default function FeedPage() {
                     </p>
                   </div>
                 ) : (
-                  posts.map((post: any) => (
+                  posts.map((post: FeedCardProps["post"]) => (
                     <motion.div
                       key={post.id}
                       initial={{ opacity: 0, y: 10 }}
@@ -178,6 +178,7 @@ export default function FeedPage() {
 
             {/* Right Sidebar */}
             <div className="hidden lg:block space-y-5">
+              <SkillGapWidget />
               {/* Skill Passport Widget */}
               <div className="glass-card rounded-2xl p-5">
                 <div className="flex items-center gap-2 mb-4">

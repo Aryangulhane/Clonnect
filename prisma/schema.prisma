@@ -62,20 +62,56 @@ model User {
   year         Int?
   bio          String?  @db.Text
   username     String?  @unique
+  xp           Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  accounts      Account[]
-  sessions      Session[]
-  skills        UserSkill[]
-  posts         Post[]
-  comments      Comment[]
-  likes         Like[]
-  saves         Save[]
-  followers     Follow[]  @relation("following")
-  following     Follow[]  @relation("follower")
-  notifications Notification[]
-  files         File[]
+  accounts            Account[]
+  sessions            Session[]
+  skills              UserSkill[]
+  posts               Post[]
+  comments            Comment[]
+  likes               Like[]
+  saves               Save[]
+  followers           Follow[]         @relation("following")
+  following           Follow[]         @relation("follower")
+  notifications       Notification[]
+  files               File[]
+  badges              Badge[]
+  createdStudyGroups  StudyGroup[]     @relation("CreatedGroups")
+  studyGroupMembers   StudyGroupMember[]
+}
+
+model Badge {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  awardedAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model StudyGroup {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  scheduledAt DateTime
+  maxMembers  Int      @default(10)
+  topic       String
+  creatorId   String
+  createdAt   DateTime @default(now())
+  creator     User     @relation("CreatedGroups", fields: [creatorId], references: [id], onDelete: Cascade)
+  members     StudyGroupMember[]
+}
+
+model StudyGroupMember {
+  id       String     @id @default(cuid())
+  groupId  String
+  userId   String
+  joinedAt DateTime   @default(now())
+  group    StudyGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
 }
 
 model Skill {

@@ -1,31 +1,24 @@
-import { neonConfig } from "@neondatabase/serverless";
-import { PrismaNeon } from "@prisma/adapter-neon";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 
 declare global {
-  // eslint-disable-next-line no-var
   var __prisma: PrismaClient | undefined;
 }
 
-// Enable WebSocket connections for local dev (Node.js doesn't have native WebSocket in older versions)
-// In Vercel's edge/serverless environment this is a no-op
-if (typeof globalThis.WebSocket === "undefined") {
-  // ws package provides a WebSocket implementation for Node.js
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  neonConfig.webSocketConstructor = require("ws");
-}
-
-function createClient(): PrismaClient {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error("DATABASE_URL environment variable is not set");
+function createPrismaClient() {
+  if (!process.env.DATABASE_URL) {
+    throw new Error(
+      "DATABASE_URL is not set. Add it to your .env file.\nGet it from: https://console.neon.tech"
+    );
   }
-
-  const adapter = new PrismaNeon({ connectionString });
-  return new PrismaClient({ adapter });
+  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+  return new PrismaClient({
+    adapter,
+    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+  });
 }
 
-export const prisma = globalThis.__prisma ?? createClient();
+export const prisma = globalThis.__prisma ?? createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") {
   globalThis.__prisma = prisma;

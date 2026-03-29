@@ -23,7 +23,8 @@ export const authConfig: NextAuthConfig = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      // Stub authorize — the full implementation is in auth.ts
+      // NOTE: This authorize stub is intentional — the real authorize()
+      // lives in src/lib/auth.ts. This file is edge-compatible (no Prisma).
       authorize: () => null,
     }),
   ],
@@ -47,7 +48,7 @@ export const authConfig: NextAuthConfig = {
       return true;
     },
     async session({ session, token }) {
-      if (token.sub && session.user) {
+      if (token?.sub && session?.user) {
         session.user.id = token.sub;
       }
       return session;

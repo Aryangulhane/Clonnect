@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { pusherServer } from "@/lib/pusher-server";
 
 // POST /api/users/[id]/follow — toggle follow
 export async function POST(
@@ -40,6 +41,16 @@ export async function POST(
         linkUrl: `/profile/${session.user.id}`,
       },
     });
+    if (pusherServer) {
+      try {
+        await pusherServer.trigger(`user-${id}`, "new-notification", {
+          message: `${session.user.name} started following you!`,
+          type: "FOLLOW",
+        });
+      } catch {
+        /* Pusher optional in dev */
+      }
+    }
     return NextResponse.json({ following: true });
   }
 }

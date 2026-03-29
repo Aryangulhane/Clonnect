@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import {
-  BookOpen, Search, FolderOpen, Tag, Upload, Filter, X,
+  BookOpen, Search, FolderOpen, Upload,
   FileText, Image, File, ExternalLink, Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";

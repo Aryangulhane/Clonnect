@@ -8,10 +8,6 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "utfs.io" },
     ],
   },
-  typescript: {
-    // Allow build even with type issues for initial scaffolding
-    ignoreBuildErrors: true,
-  },
 };
 
 export default nextConfig;

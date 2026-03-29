@@ -1,0 +1,34 @@
+import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+
+export async function GET() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    include: { skills: { include: { skill: true } } },
+  });
+
+  const popularTags = await prisma.postTag.groupBy({
+    by: ["tagName"],
+    _count: { tagName: true },
+    orderBy: { _count: { tagName: "desc" } },
+    take: 20,
+  });
+
+  const userSkillNames = user?.skills.map((s) => s.skill.name.toLowerCase()) ?? [];
+  const gaps = popularTags
+    .map((t) => t.tagName)
+    .filter((tag) => !userSkillNames.includes(tag.toLowerCase()))
+    .slice(0, 5);
+
+  return NextResponse.json({
+    currentSkills: user?.skills.map((s) => ({ name: s.skill.name, level: s.proficiencyLevel })) ?? [],
+    suggestedSkills: gaps,
+    popularTags: popularTags.map((t) => ({ name: t.tagName, count: t._count.tagName })),
+  });
+}

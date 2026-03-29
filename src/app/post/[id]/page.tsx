@@ -2,7 +2,7 @@
 
 import { useState, use } from "react";
 import Link from "next/link";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
 import {
@@ -17,7 +17,30 @@ import { Navbar } from "@/components/layout/Navbar";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { cn } from "@/lib/utils";
 
-function CommentThread({ comment, postId, onReply }: { comment: any; postId: string; onReply: () => void }) {
+interface CommentAuthor {
+  id: string;
+  name: string | null;
+  image: string | null;
+  username: string | null;
+}
+
+interface CommentNode {
+  id: string;
+  content: string;
+  createdAt: string;
+  author: CommentAuthor;
+  replies?: CommentNode[];
+}
+
+function CommentThread({
+  comment,
+  postId,
+  onReply,
+}: {
+  comment: CommentNode;
+  postId: string;
+  onReply: () => void;
+}) {
   const [showReplyBox, setShowReplyBox] = useState(false);
   const [replyContent, setReplyContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -79,9 +102,9 @@ function CommentThread({ comment, postId, onReply }: { comment: any; postId: str
         </div>
       </div>
       {/* Nested replies */}
-      {comment.replies?.length > 0 && (
+      {comment.replies && comment.replies.length > 0 && (
         <div className="ml-11 space-y-3 border-l-2 border-border/20 pl-4">
-          {comment.replies.map((reply: any) => (
+          {comment.replies.map((reply: CommentNode) => (
             <div key={reply.id} className="flex gap-3">
               <Avatar className="h-7 w-7 shrink-0">
                 <AvatarImage src={reply.author.image || ""} />
@@ -224,7 +247,7 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
           {/* Tags */}
           {post.tags?.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-4">
-              {post.tags.map((tag: any) => (
+              {post.tags.map((tag: { tagName: string }) => (
                 <Badge key={tag.tagName} variant="secondary" className="text-xs font-mono bg-secondary/50">#{tag.tagName}</Badge>
               ))}
             </div>
@@ -273,7 +296,7 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
         {/* Comments */}
         <div className="mt-6 space-y-4">
           <h3 className="text-sm font-semibold">Comments ({post.comments?.length || 0})</h3>
-          {post.comments?.map((comment: any) => (
+          {post.comments?.map((comment: CommentNode) => (
             <CommentThread
               key={comment.id}
               comment={comment}

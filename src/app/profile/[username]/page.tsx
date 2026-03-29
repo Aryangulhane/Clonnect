@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
-  MapPin, GraduationCap, Calendar, Users, FileText, MessageCircle,
+  MapPin, GraduationCap, Calendar, FileText,
   HelpCircle, UserPlus, UserCheck, ExternalLink,
 } from "lucide-react";
 import {
@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Navbar } from "@/components/layout/Navbar";
 import { MobileNav } from "@/components/layout/MobileNav";
-import { FeedCard } from "@/components/feed/FeedCard";
+import { FeedCard, type FeedCardProps } from "@/components/feed/FeedCard";
 import { cn } from "@/lib/utils";
 
 export default function ProfilePage({ params }: { params: Promise<{ username: string }> }) {
@@ -29,9 +29,9 @@ export default function ProfilePage({ params }: { params: Promise<{ username: st
   });
 
   const { data: postsData } = useQuery({
-    queryKey: ["userPosts", username],
-    queryFn: () => fetch(`/api/posts?authorId=${user?.id}`).then((r) => r.json()),
-    enabled: !!user?.id,
+    queryKey: ["userPosts", user?.id],
+    queryFn: () => fetch(`/api/posts?authorId=${user!.id}&limit=20`).then((r) => r.json()),
+    enabled: !!user?.id && !(user && "error" in user && user.error),
   });
 
   async function handleFollow() {
@@ -58,7 +58,7 @@ export default function ProfilePage({ params }: { params: Promise<{ username: st
     );
   }
 
-  if (!user || user.error) {
+  if (!user || ("error" in user && user.error)) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
@@ -70,8 +70,15 @@ export default function ProfilePage({ params }: { params: Promise<{ username: st
     );
   }
 
-  // Prepare radar chart data from skills
-  const radarData = (user.skills || []).slice(0, 6).map((us: any) => ({
+  type ProfilePost = FeedCardProps["post"];
+  type SkillRow = { skill: { id: string; name: string }; proficiencyLevel: number };
+
+  const resources =
+    postsData?.posts?.filter((p: ProfilePost) => p.type === "RESOURCE") ?? [];
+  const questions =
+    postsData?.posts?.filter((p: ProfilePost) => p.type === "HELP_REQUEST") ?? [];
+
+  const radarData = (user.skills || []).slice(0, 6).map((us: SkillRow) => ({
     skill: us.skill.name,
     level: us.proficiencyLevel * 20,
   }));
@@ -145,7 +152,7 @@ export default function ProfilePage({ params }: { params: Promise<{ username: st
             {/* Skills */}
             {user.skills && user.skills.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-5 pt-4 border-t border-border/30">
-                {user.skills.map((us: any) => (
+                {user.skills.map((us: SkillRow) => (
                   <Badge key={us.skill.id} variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-xs">
                     {us.skill.name}
                     <span className="ml-1 text-[10px] text-muted-foreground">Lv.{us.proficiencyLevel}</span>
@@ -197,16 +204,24 @@ export default function ProfilePage({ params }: { params: Promise<{ username: st
                 </TabsList>
                 <TabsContent value="posts" className="mt-4 space-y-4">
                   {postsData?.posts?.length > 0 ? (
-                    postsData.posts.map((post: any) => <FeedCard key={post.id} post={post} />)
+                    postsData.posts.map((post: ProfilePost) => <FeedCard key={post.id} post={post} />)
                   ) : (
                     <p className="text-center text-sm text-muted-foreground py-12">No posts yet</p>
                   )}
                 </TabsContent>
-                <TabsContent value="resources" className="mt-4">
-                  <p className="text-center text-sm text-muted-foreground py-12">No resources shared yet</p>
+                <TabsContent value="resources" className="mt-4 space-y-4">
+                  {resources.length > 0 ? (
+                    resources.map((post: ProfilePost) => <FeedCard key={post.id} post={post} />)
+                  ) : (
+                    <p className="text-center text-sm text-muted-foreground py-12">No resources shared yet</p>
+                  )}
                 </TabsContent>
-                <TabsContent value="questions" className="mt-4">
-                  <p className="text-center text-sm text-muted-foreground py-12">No questions asked yet</p>
+                <TabsContent value="questions" className="mt-4 space-y-4">
+                  {questions.length > 0 ? (
+                    questions.map((post: ProfilePost) => <FeedCard key={post.id} post={post} />)
+                  ) : (
+                    <p className="text-center text-sm text-muted-foreground py-12">No questions asked yet</p>
+                  )}
                 </TabsContent>
               </Tabs>
             </div>

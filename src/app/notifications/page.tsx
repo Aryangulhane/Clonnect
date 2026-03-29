@@ -1,21 +1,24 @@
 "use client";
 
+import { useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { pusherClient } from "@/lib/pusher-client";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
+import type { LucideIcon } from "lucide-react";
 import {
-  Bell, Check, CheckCheck, Heart, MessageCircle,
+  Bell, CheckCheck, Heart, MessageCircle,
   UserPlus, AtSign, Zap, Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Navbar } from "@/components/layout/Navbar";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { cn } from "@/lib/utils";
 
-const notificationIcons: Record<string, any> = {
+const notificationIcons: Record<string, LucideIcon> = {
   LIKE: Heart,
   REPLY: MessageCircle,
   FOLLOW: UserPlus,
@@ -33,20 +36,46 @@ const notificationColors: Record<string, string> = {
   SYSTEM: "text-blue-400 bg-blue-400/10",
 };
 
+interface NotificationRow {
+  id: string;
+  type: string;
+  message: string;
+  isRead: boolean;
+  linkUrl?: string | null;
+  createdAt: string;
+}
+
 export default function NotificationsPage() {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
 
   const { data, isLoading } = useQuery({
     queryKey: ["notifications"],
     queryFn: () => fetch("/api/notifications").then((r) => r.json()),
   });
 
+  useEffect(() => {
+    const client = pusherClient;
+    const userId = session?.user?.id;
+    if (!client || !userId) return;
+    const channelName = `user-${userId}`;
+    const channel = client.subscribe(channelName);
+    channel.bind("new-notification", () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications-count"] });
+    });
+    return () => {
+      channel.unbind_all();
+      client.unsubscribe(channelName);
+    };
+  }, [session?.user?.id, queryClient]);
+
   async function markAllRead() {
     await fetch("/api/notifications", { method: "PATCH" });
     queryClient.invalidateQueries({ queryKey: ["notifications"] });
   }
 
-  const notifications = data?.notifications || [];
+  const notifications = (data?.notifications ?? []) as NotificationRow[];
   const unreadCount = data?.unreadCount || 0;
 
   return (
@@ -101,7 +130,7 @@ export default function NotificationsPage() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {notifications.map((notif: any, i: number) => {
+                  {notifications.map((notif, i: number) => {
                     const Icon = notificationIcons[notif.type] || Bell;
                     const colorClass = notificationColors[notif.type] || "text-muted-foreground bg-secondary/30";
                     return (

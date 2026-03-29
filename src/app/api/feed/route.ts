@@ -22,6 +22,19 @@ export async function GET(req: NextRequest) {
     where = { authorId: { in: followingIds } };
   } else if (tab === "resources") {
     where = { type: "RESOURCE" };
+  } else if (tab === "campus" && session?.user?.id) {
+    const currentUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { university: true },
+    });
+    if (currentUser?.university) {
+      const campusPeers = await prisma.user.findMany({
+        where: { university: currentUser.university, id: { not: session.user.id } },
+        select: { id: true },
+      });
+      const ids = campusPeers.map((u) => u.id);
+      where = ids.length > 0 ? { authorId: { in: ids } } : { id: { in: [] } };
+    }
   }
 
   const posts = await prisma.post.findMany({

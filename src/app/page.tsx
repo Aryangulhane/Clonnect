@@ -7,14 +7,13 @@ import type { Variants } from "framer-motion";
 import {
   ArrowRight,
   Sparkles,
-  BookOpen,
-  Users,
   Zap,
   Calendar,
   MessageSquare,
   Share2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { GlobeErrorBoundary } from "@/components/globe/GlobeErrorBoundary";
 
 const KnowledgeGlobe = dynamic(
   () => import("@/components/globe/KnowledgeGlobe"),
@@ -192,7 +191,9 @@ export default function LandingPage() {
             transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
             className="relative h-[500px] lg:h-[600px]"
           >
-            <KnowledgeGlobe />
+            <GlobeErrorBoundary>
+              <KnowledgeGlobe />
+            </GlobeErrorBoundary>
           </motion.div>
         </div>
       </section>

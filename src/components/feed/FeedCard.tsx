@@ -1,17 +1,25 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 import {
-  Heart, MessageCircle, Bookmark, Share2, MoreHorizontal,
-  AlertTriangle, FileText, Users,
+  Heart,
+  MessageCircle,
+  Bookmark,
+  Share2,
+  MoreHorizontal,
+  AlertTriangle,
+  FileText,
+  Users,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-interface FeedCardProps {
+export interface FeedCardProps {
   post: {
     id: string;
     type: "HELP_REQUEST" | "RESOURCE" | "GENERAL";
@@ -36,13 +44,33 @@ interface FeedCardProps {
 }
 
 export function FeedCard({ post, onLike, onSave }: FeedCardProps) {
+  const [liked, setLiked] = useState(post.userLiked ?? false);
+  const [likeCount, setLikeCount] = useState(post._count.likes);
+
+  // Keep local optimistic state in sync when the server sends updated post data (e.g. after refetch).
+  /* eslint-disable react-hooks/set-state-in-effect -- syncing props → local UI state after parent refetch */
+  useEffect(() => {
+    setLiked(post.userLiked ?? false);
+    setLikeCount(post._count.likes);
+  }, [post.id, post.userLiked, post._count.likes]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
   const isHelp = post.type === "HELP_REQUEST";
   const isResource = post.type === "RESOURCE";
   const timeAgo = formatDistanceToNow(new Date(post.createdAt), { addSuffix: true });
 
+  async function handleLikeClick() {
+    const wasLiked = liked;
+    setLiked(!wasLiked);
+    setLikeCount(wasLiked ? likeCount - 1 : likeCount + 1);
+    await onLike?.(post.id);
+    if (!wasLiked) {
+      toast.success("Post liked!", { duration: 1500, position: "bottom-center" });
+    }
+  }
+
   return (
     <article className="glass-card rounded-2xl p-5 transition-all duration-300 hover:translate-y-[-1px]">
-      {/* Urgent badge */}
       {isHelp && post.isUrgent && (
         <div className="flex items-center gap-1.5 mb-3 text-amber-400">
           <AlertTriangle className="h-3.5 w-3.5" />
@@ -50,7 +78,6 @@ export function FeedCard({ post, onLike, onSave }: FeedCardProps) {
         </div>
       )}
 
-      {/* Post type badge */}
       {(isHelp || isResource) && (
         <div className="mb-3">
           <Badge
@@ -66,7 +93,6 @@ export function FeedCard({ post, onLike, onSave }: FeedCardProps) {
         </div>
       )}
 
-      {/* Author header */}
       <div className="flex items-center justify-between mb-3">
         <Link href={`/profile/${post.author.username || post.author.id}`} className="flex items-center gap-3 group">
           <Avatar className="h-10 w-10">
@@ -76,11 +102,10 @@ export function FeedCard({ post, onLike, onSave }: FeedCardProps) {
             </AvatarFallback>
           </Avatar>
           <div>
-            <p className="text-sm font-semibold group-hover:text-primary transition-colors">
-              {post.author.name}
-            </p>
+            <p className="text-sm font-semibold group-hover:text-primary transition-colors">{post.author.name}</p>
             <p className="text-xs text-muted-foreground">
-              {post.author.university && `${post.author.university} · `}{timeAgo}
+              {post.author.university && `${post.author.university} · `}
+              {timeAgo}
             </p>
           </div>
         </Link>
@@ -89,23 +114,18 @@ export function FeedCard({ post, onLike, onSave }: FeedCardProps) {
         </Button>
       </div>
 
-      {/* Title */}
       {post.title && (
         <Link href={`/post/${post.id}`}>
-          <h3 className="mb-2 text-lg font-semibold hover:text-primary transition-colors leading-snug">
-            {post.title}
-          </h3>
+          <h3 className="mb-2 text-lg font-semibold hover:text-primary transition-colors leading-snug">{post.title}</h3>
         </Link>
       )}
 
-      {/* Content */}
       <Link href={`/post/${post.id}`}>
         <p className="text-sm leading-relaxed text-muted-foreground line-clamp-4 hover:text-foreground transition-colors">
           {post.content}
         </p>
       </Link>
 
-      {/* Tags */}
       {post.tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mt-3">
           {post.tags.map((tag) => (
@@ -120,7 +140,6 @@ export function FeedCard({ post, onLike, onSave }: FeedCardProps) {
         </div>
       )}
 
-      {/* Help Request CTA */}
       {isHelp && (
         <Link href={`/post/${post.id}`}>
           <Button
@@ -134,17 +153,16 @@ export function FeedCard({ post, onLike, onSave }: FeedCardProps) {
         </Link>
       )}
 
-      {/* Actions */}
       <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/30">
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
             size="sm"
-            className={cn("h-8 gap-1.5 text-xs", post.userLiked ? "text-pink-400" : "text-muted-foreground")}
-            onClick={() => onLike?.(post.id)}
+            className={cn("h-8 gap-1.5 text-xs", liked ? "text-pink-400" : "text-muted-foreground")}
+            onClick={handleLikeClick}
           >
-            <Heart className={cn("h-4 w-4", post.userLiked && "fill-current")} />
-            {post._count.likes > 0 && post._count.likes}
+            <Heart className={cn("h-4 w-4", liked && "fill-current")} />
+            {likeCount > 0 && likeCount}
           </Button>
           <Link href={`/post/${post.id}`}>
             <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs text-muted-foreground">
