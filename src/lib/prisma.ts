@@ -42,7 +42,8 @@ function getPrismaClient(): PrismaClient {
 }
 
 export const prisma = new Proxy({} as PrismaClient, {
-  get(_target, prop, receiver) {
-    return Reflect.get(getPrismaClient(), prop, receiver);
+  get(_target, prop) {
+    const client = getPrismaClient();
+    return Reflect.get(client, prop, client);
   },
 });

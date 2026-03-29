@@ -12,6 +12,7 @@ const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
  */
 export const authConfig: NextAuthConfig = {
   trustHost: true,
+  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
   pages: {
     signIn: "/auth/login",
     newUser: "/auth/register",
