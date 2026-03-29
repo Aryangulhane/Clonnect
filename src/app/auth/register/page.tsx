@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ClonnectLogo } from "@/components/brand/ClonnectLogo";
+import { getSafeCallbackPath } from "@/lib/auth-redirect";
 import {
   Eye, EyeOff, Mail, Lock, User,
   ArrowRight, Loader2, X, Plus,
@@ -62,6 +64,7 @@ const DEPARTMENTS = [
 ];
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -132,11 +135,17 @@ export default function RegisterPage() {
         return;
       }
       // Auto sign in after registration
-      await signIn("credentials", {
+      const signInResult = await signIn("credentials", {
         email: data.email,
         password: data.password,
         callbackUrl: "/feed",
+        redirect: false,
       });
+      if (signInResult?.error) {
+        setError("Account created, but automatic sign-in failed. Please log in manually.");
+        return;
+      }
+      router.replace(getSafeCallbackPath(signInResult?.url, "/feed"));
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {

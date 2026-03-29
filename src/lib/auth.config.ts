@@ -1,6 +1,7 @@
 import type { NextAuthConfig } from "next-auth";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
+import { getPreferredBaseUrl, getSafeCallbackPath } from "@/lib/auth-redirect";
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -10,6 +11,7 @@ const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
  * Used by middleware.ts for route protection.
  */
 export const authConfig: NextAuthConfig = {
+  trustHost: true,
   pages: {
     signIn: "/auth/login",
     newUser: "/auth/register",
@@ -65,6 +67,11 @@ export const authConfig: NextAuthConfig = {
         token.sub = user.id;
       }
       return token;
+    },
+    async redirect({ url, baseUrl }) {
+      const preferredBaseUrl = getPreferredBaseUrl(baseUrl);
+      const safePath = getSafeCallbackPath(url, "/feed");
+      return new URL(safePath, preferredBaseUrl).toString();
     },
   },
   session: { strategy: "jwt" },

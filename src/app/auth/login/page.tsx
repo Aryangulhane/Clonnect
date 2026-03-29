@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ClonnectLogo } from "@/components/brand/ClonnectLogo";
+import { getSafeCallbackPath } from "@/lib/auth-redirect";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +26,7 @@ type LoginForm = z.infer<typeof loginSchema>;
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/feed";
+  const callbackUrl = getSafeCallbackPath(searchParams.get("callbackUrl"), "/feed");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -66,11 +67,12 @@ function LoginForm() {
         email: data.email,
         password: data.password,
         redirect: false,
+        callbackUrl,
       });
       if (result?.error) {
         setError("Invalid email or password");
       } else {
-        router.push(callbackUrl);
+        router.replace(getSafeCallbackPath(result?.url, callbackUrl));
       }
     } catch {
       setError("Something went wrong. Please try again.");
