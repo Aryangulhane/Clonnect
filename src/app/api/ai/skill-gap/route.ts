@@ -20,14 +20,14 @@ export async function GET() {
     take: 20,
   });
 
-  const userSkillNames = user?.skills.map((s) => s.skill.name.toLowerCase()) ?? [];
+  const userSkillNames = user?.skills.map((s: { skill: { name: string }; proficiencyLevel: number }) => s.skill.name.toLowerCase()) ?? [];
   const gaps = popularTags
-    .map((t) => t.tagName)
-    .filter((tag) => !userSkillNames.includes(tag.toLowerCase()))
+    .map((t: { tagName: string }) => t.tagName)
+    .filter((tag: string) => !userSkillNames.includes(tag.toLowerCase()))
     .slice(0, 5);
 
   return NextResponse.json({
-    currentSkills: user?.skills.map((s) => ({ name: s.skill.name, level: s.proficiencyLevel })) ?? [],
+    currentSkills: user?.skills.map((s: { skill: { name: string }; proficiencyLevel: number }) => ({ name: s.skill.name, level: s.proficiencyLevel })) ?? [],
     suggestedSkills: gaps,
     popularTags: popularTags.map((t) => ({ name: t.tagName, count: t._count.tagName })),
   });
