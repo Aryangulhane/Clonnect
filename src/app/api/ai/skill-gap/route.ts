@@ -2,6 +2,16 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+type UserSkillRow = {
+  skill: { name: string };
+  proficiencyLevel: number;
+};
+
+type PopularTagRow = {
+  tagName: string;
+  _count: { tagName: number };
+};
+
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
@@ -20,15 +30,23 @@ export async function GET() {
     take: 20,
   });
 
-  const userSkillNames = user?.skills.map((s: { skill: { name: string }; proficiencyLevel: number }) => s.skill.name.toLowerCase()) ?? [];
+  const userSkillNames =
+    user?.skills.map((s: UserSkillRow) => s.skill.name.toLowerCase()) ?? [];
   const gaps = popularTags
-    .map((t: { tagName: string }) => t.tagName)
+    .map((t: PopularTagRow) => t.tagName)
     .filter((tag: string) => !userSkillNames.includes(tag.toLowerCase()))
     .slice(0, 5);
 
   return NextResponse.json({
-    currentSkills: user?.skills.map((s: { skill: { name: string }; proficiencyLevel: number }) => ({ name: s.skill.name, level: s.proficiencyLevel })) ?? [],
+    currentSkills:
+      user?.skills.map((s: UserSkillRow) => ({
+        name: s.skill.name,
+        level: s.proficiencyLevel,
+      })) ?? [],
     suggestedSkills: gaps,
-    popularTags: popularTags.map((t) => ({ name: t.tagName, count: t._count.tagName })),
+    popularTags: popularTags.map((t: PopularTagRow) => ({
+      name: t.tagName,
+      count: t._count.tagName,
+    })),
   });
 }
